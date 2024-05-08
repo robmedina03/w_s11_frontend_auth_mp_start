@@ -1,4 +1,6 @@
 import React, { useState } from 'react'
+import axios from 'axios'
+import {  useNavigate } from 'react-router-dom'
 
 export default function AuthForm() {
   const [isLogin, setIsLogin] = useState(true)
@@ -6,11 +8,39 @@ export default function AuthForm() {
   const [password, setPassword] = useState('')
   const [error, setError] = useState('')
   const [message, setMessage] = useState('')
+  const navigate = useNavigate()
+  
 
-  const toggleFormMode = () => {
+
+  const toggleFormMode = (event) => {
+    event.preventDefault()
     setIsLogin(!isLogin)
     setError('')
     setMessage('')
+  }
+
+    const handleSubmit = async (event) => {
+      event.preventDefault()
+    
+    try{
+      const {data} = await axios.post(`/api/auth/${isLogin ? 'login': 'register'}`, {username, password})
+
+      if(isLogin){
+        localStorage.setItem('token', data.token)
+        navigate('/stars')
+
+      }else {
+        setMessage(data.message)
+      }
+      
+      
+
+
+    }catch (error){
+      setError(error?.response?.message)
+
+    }
+
   }
   const handleUsernameChange = (event) => {
     setUsername(event.target.value)
@@ -19,16 +49,18 @@ export default function AuthForm() {
     setPassword(event.target.value)
   }
 
+
+
   return (
     <div className="container">
-      <div aria-live="polite">{message}</div>
+      
       <div aria-live="assertive" style={{ color: 'red' }}>{error}</div>
       <h3>{isLogin ? 'Login' : 'Register'}
         <button onClick={toggleFormMode}>
           Switch to {isLogin ? 'Register' : 'Login'}
         </button>
       </h3>
-      <form>
+      <form onSubmit={handleSubmit}>
         <div>
           <label htmlFor="username">Username:</label>
           <input
